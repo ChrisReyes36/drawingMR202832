@@ -14,7 +14,7 @@ namespace drawingMR202832
     {
         enum Posicion
         {
-            izquierda, derecha, arriba, abajo
+            Izquierda, Derecha, Arriba, Abajo
         }
 
         private int x, y;
@@ -23,69 +23,116 @@ namespace drawingMR202832
         private Point punto;
         private const int TamanioCelda = 20;
 
-        private void ejercicio3guia1PED_Paint(object sender, PaintEventArgs e)
-        {
-            e.Graphics.DrawImage(new Bitmap("birrete.png"), x, y, 65, 65);
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            if (objPosicion == Posicion.derecha)
-            {
-                x += 10;
-            }else if (objPosicion == Posicion.izquierda)
-            {
-                x -= 10;
-            }else if(objPosicion == Posicion.arriba)
-            {
-                y -= 10;
-            }else if(objPosicion == Posicion.abajo)
-            {
-                y += 10;
-            }
-
-            Invalidate();
-        }
-
-        private void ejercicio3guia1PED_KeyDown(object sender, KeyEventArgs e)
-        {
-            if(e.KeyCode == Keys.Left)
-            {
-                objPosicion = Posicion.izquierda;
-            }else if (e.KeyCode == Keys.Right)
-            {
-                objPosicion = Posicion.derecha;
-            }else if (e.KeyCode == Keys.Up)
-            {
-                objPosicion = Posicion.arriba;
-            }else if (e.KeyCode == Keys.Down)
-            {
-                objPosicion = Posicion.abajo;
-            }
-        }
-
         public ejercicio3guia1PED()
         {
             InitializeComponent();
             x = 50;
             y = 50;
-            objPosicion = Posicion.abajo;
+            objPosicion = Posicion.Abajo;
 
-            puntos = new List<Point>();
-            puntos.Add(new Point(5, 5));
+            puntos = new List<Point> {
+                new Point(5, 5)
+            };
 
-            punto = generarObjeto();
+            punto = GenerarObjeto();
 
             DoubleBuffered = true;
             KeyPreview = true;
         }
 
-        private Point generarObjeto()
+        private void ejercicio3guia1PED_Paint(object sender, PaintEventArgs e)
+        {
+            // e.Graphics.DrawImage(new Bitmap("birrete.png"), x, y, 65, 65);
+            foreach (Point segmento in puntos)
+            {
+                e.Graphics.FillRectangle(Brushes.Green, segmento.X * TamanioCelda, segmento.Y * TamanioCelda, TamanioCelda, TamanioCelda);
+            }
+
+            e.Graphics.FillEllipse(Brushes.Red, punto.X * TamanioCelda, punto.Y * TamanioCelda, TamanioCelda, TamanioCelda);
+        }
+
+        private void ejercicio3guia1PED_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Left)
+            {
+                objPosicion = Posicion.Izquierda;
+            }
+            else if (e.KeyCode == Keys.Right)
+            {
+                objPosicion = Posicion.Derecha;
+            }
+            else if (e.KeyCode == Keys.Up)
+            {
+                objPosicion = Posicion.Arriba;
+            }
+            else if (e.KeyCode == Keys.Down)
+            {
+                objPosicion = Posicion.Abajo;
+            }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            Point cabeza = puntos[0];
+            Point nuevo = new Point(cabeza.X, cabeza.Y);
+
+            switch (objPosicion)
+            {
+                case Posicion.Derecha:
+                    nuevo.X += 1;
+                    break;
+                case Posicion.Izquierda:
+                    nuevo.X -= 1;
+                    break;
+                case Posicion.Arriba:
+                    nuevo.Y -= 1;
+                    break;
+                case Posicion.Abajo:
+                    nuevo.Y += 1;
+                    break;
+            }
+
+            if (nuevo == punto)
+            {
+                puntos.Add(punto);
+                punto = GenerarObjeto();
+            }else
+            {
+                puntos.Insert(0, nuevo);
+                if (puntos.Count > 1)
+                {
+                    puntos.RemoveAt(puntos.Count - 1);
+                }
+            }
+                
+            
+            if (nuevo.X < 0 || nuevo.X >= ClientSize.Width / TamanioCelda || nuevo.Y < 0 || nuevo.Y >= ClientSize.Height / TamanioCelda)
+            {
+                timer1.Stop();
+                MessageBox.Show("Perdiste");
+                ReiniciarJuego();
+                return;
+            }
+
+            Invalidate();
+        }
+
+        private Point GenerarObjeto()
         {
             Random rnd = new Random();
             int x = rnd.Next(ClientSize.Width / TamanioCelda);
             int y = rnd.Next(ClientSize.Height / TamanioCelda);
             return new Point(x, y);
+        }
+
+        private void ReiniciarJuego()
+        {
+            puntos.Clear();
+            puntos.Add(new Point(5, 5));
+            objPosicion = Posicion.Abajo;
+            punto = GenerarObjeto();
+            timer1.Start();
+            Invalidate();
         }
     }
 }
